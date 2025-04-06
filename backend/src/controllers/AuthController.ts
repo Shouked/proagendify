@@ -1,8 +1,17 @@
 import { Request, Response } from 'express';
 import { hash, compare } from 'bcryptjs';
-import { sign } from 'jsonwebtoken';
+import { sign, verify } from 'jsonwebtoken';
 import { prisma } from '../lib/prisma';
 import { AppError } from '../errors/AppError';
+
+interface TokenPayload {
+  id: string;
+  role: string;
+  tenantId: string;
+  iat: number;
+  exp: number;
+  sub: string;
+}
 
 export class AuthController {
   async login(request: Request, response: Response) {
@@ -200,4 +209,4 @@ export class AuthController {
 
     return response.json({ message: 'Password updated successfully' });
   }
-} 
+}
