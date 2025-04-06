@@ -3,16 +3,16 @@ const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
   images: {
-    domains: ['localhost'],
+    domains: ['localhost', 'proagendify.onrender.com'], // Adicione o domínio do Render
   },
   async rewrites() {
     return [
       {
         source: '/api/:path*',
-        destination: 'http://localhost:3333/api/:path*',
+        destination: `${process.env.NEXT_PUBLIC_API_URL}/:path*`, // Usa a variável de ambiente
       },
     ];
   },
 };
 
-module.exports = nextConfig; 
+module.exports = nextConfig;
