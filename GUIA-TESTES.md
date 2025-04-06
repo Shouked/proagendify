@@ -2,9 +2,51 @@
 
 Este guia fornece instruções detalhadas para configurar e testar o sistema ProAgendify localmente, assumindo diferentes papéis: dono do app, administrador de estabelecimento e cliente final.
 
+## 0. Pré-requisitos
+
+### 0.1. Instalação do Docker
+
+1. Baixe o Docker Desktop para Windows em: https://www.docker.com/products/docker-desktop
+2. Execute o instalador e siga as instruções
+3. Após a instalação, reinicie seu computador
+4. Abra o Docker Desktop e aguarde ele inicializar completamente
+5. Verifique se o Docker está funcionando abrindo o PowerShell e executando:
+   ```bash
+   docker --version
+   ```
+
+### 0.2. Configuração do Banco de Dados Neon
+
+O projeto está configurado para usar o Neon (PostgreSQL na nuvem). Para configurar:
+
+1. Acesse https://neon.tech e crie uma conta
+2. Crie um novo projeto
+3. Copie a string de conexão fornecida
+4. No arquivo `backend/.env`, atualize a variável `DATABASE_URL` com a string de conexão do Neon:
+   ```
+   DATABASE_URL="sua_string_de_conexao_do_neon"
+   ```
+
 ## 1. Configuração Inicial do Ambiente
 
-### 1.1. Iniciar os Containers Docker
+### 1.1. Instalar Dependências
+
+```bash
+# Na raiz do projeto
+npm install
+
+# Instalar dependências do backend
+cd backend
+npm install
+
+# Instalar dependências do frontend
+cd ../frontend
+npm install
+```
+
+### 1.2. Iniciar os Serviços
+
+#### Opção 1: Usando Docker (Recomendado)
 
 ```bash
 # Na raiz do projeto
@@ -17,13 +59,28 @@ Este comando iniciará:
 - Backend (API)
 - Frontend (interface do usuário)
 
-### 1.2. Verificar se os Containers Estão Rodando
+#### Opção 2: Iniciando Serviços Separadamente
 
+```bash
+# Terminal 1 - Backend
+cd backend
+npm run dev
+
+# Terminal 2 - Frontend
+cd frontend
+npm run dev
+```
+
+### 1.3. Verificar se os Serviços Estão Rodando
+
+Se usando Docker:
 ```bash
 docker ps
 ```
 
-Você deve ver os 4 containers em execução.
+Se iniciando separadamente:
+- Backend deve estar rodando em http://localhost:3333
+- Frontend deve estar rodando em http://localhost:3000
 
 ## 2. Configuração do Banco de Dados
 
@@ -34,9 +91,25 @@ cd backend
 npm run prisma:migrate
 ```
 
-Este comando criará as tabelas no banco de dados conforme definido no schema.prisma.
+Este comando criará as tabelas no banco de dados Neon conforme definido no schema.prisma.
 
 ### 2.2. Criar Usuário Superadmin (Dono do App)
+
+#### Opção 1: Via API (Recomendado)
+
+```bash
+curl -X POST http://localhost:3333/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Admin Principal",
+    "email": "admin@proagendify.com",
+    "password": "senha123",
+    "role": "superadmin",
+    "tenantId": "global"
+  }'
+```
+
+#### Opção 2: Via Prisma Studio
 
 ```bash
 cd backend
@@ -63,7 +136,7 @@ No Prisma Studio:
 2. Clique em "Login"
 3. Use as credenciais:
    - Email: admin@proagendify.com
-   - Senha: (a senha que você definiu)
+   - Senha: senha123
 
 ### 3.2. Funcionalidades do Superadmin
 
@@ -77,6 +150,19 @@ Como superadmin, você pode:
 
 ### 4.1. Criar um Estabelecimento (via API)
 
+Primeiro, faça login como superadmin para obter o token JWT:
+
+```bash
+curl -X POST http://localhost:3333/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "admin@proagendify.com",
+    "password": "senha123"
+  }'
+```
+
+Copie o token JWT da resposta e use-o para criar o estabelecimento:
+
 ```bash
 curl -X POST http://localhost:3333/api/tenants \
   -H "Content-Type: application/json" \
@@ -85,11 +171,17 @@ curl -X POST http://localhost:3333/api/tenants \
     "name": "Salão de Beleza Exemplo",
     "email": "salao@exemplo.com",
     "phone": "(11) 99999-9999",
-    "address": "Rua Exemplo, 123"
+    "address": "Rua Exemplo, 123",
+    "plan": "basic",
+    "status": "active"
   }'
 ```
 
+A resposta incluirá o ID do tenant criado. Guarde esse ID para os próximos passos.
+
 ### 4.2. Criar Usuário Profissional
+
+Use o mesmo token JWT do superadmin para criar o usuário profissional:
 
 ```bash
 curl -X POST http://localhost:3333/api/users \
@@ -100,7 +192,10 @@ curl -X POST http://localhost:3333/api/users \
     "email": "profissional@exemplo.com",
     "password": "senha123",
     "role": "professional",
-    "tenantId": "ID_DO_TENANT_CRIADO"
+    "tenantId": "ID_DO_TENANT_CRIADO",
+    "phone": "(11) 98888-8888",
+    "specialties": ["Cabelo", "Manicure"],
+    "status": "active"
   }'
 ```
 
@@ -124,6 +219,8 @@ Como profissional, você pode:
 
 ### 5.1. Criar Conta de Cliente
 
+#### Opção 1: Via Interface Web
+
 1. Abra http://localhost:3000 no navegador
 2. Clique em "Registrar"
 3. Preencha o formulário:
@@ -131,7 +228,22 @@ Como profissional, você pode:
    - Email: "cliente@exemplo.com"
    - Senha: "senha123"
    - Confirme a senha: "senha123"
+   - Telefone: "(11) 97777-7777"
 4. Clique em "Criar conta"
+
+#### Opção 2: Via API
+
+```bash
+curl -X POST http://localhost:3333/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Cliente Exemplo",
+    "email": "cliente@exemplo.com",
+    "password": "senha123",
+    "role": "client",
+    "phone": "(11) 97777-7777"
+  }'
+```
 
 ### 5.2. Acessar como Cliente
 
@@ -190,19 +302,23 @@ Para testar a responsividade:
 
 ## 8. Encerrando os Testes
 
-### 8.1. Parar os Containers Docker
+### 8.1. Parar os Serviços
 
+Se usando Docker:
 ```bash
 # Na raiz do projeto
 docker-compose -f docker-compose.dev.yml down
 ```
+
+Se iniciando separadamente:
+- Pressione Ctrl+C em cada terminal onde os serviços estão rodando
 
 ### 8.2. Limpar Dados (Opcional)
 
 Se quiser limpar todos os dados e começar do zero:
 
 ```bash
-# Remover volumes
+# Se usando Docker
 docker-compose -f docker-compose.dev.yml down -v
 
 # Recriar containers
@@ -215,7 +331,7 @@ npm run prisma:migrate
 
 ## Observações Importantes
 
-1. **Banco de Dados**: O sistema está configurado para usar um banco PostgreSQL. Certifique-se de que as migrações foram executadas corretamente.
+1. **Banco de Dados**: O sistema está configurado para usar o Neon (PostgreSQL na nuvem). Certifique-se de que a string de conexão está correta no arquivo .env.
 
 2. **Autenticação**: O sistema usa JWT para autenticação. Os tokens são armazenados no localStorage do navegador.
 
@@ -239,8 +355,8 @@ Se você encontrar um erro 404 ao acessar o frontend, verifique:
 
 Se houver problemas de conexão com o banco de dados:
 
-1. Verifique se o PostgreSQL está rodando: `docker ps | grep postgres`
-2. Verifique as credenciais no arquivo .env do backend
+1. Verifique se a string de conexão do Neon está correta no arquivo .env
+2. Verifique se o banco Neon está online
 3. Tente executar as migrações novamente: `cd backend && npm run prisma:migrate`
 
 ### Problemas de autenticação
