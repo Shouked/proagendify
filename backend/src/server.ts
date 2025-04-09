@@ -9,7 +9,29 @@ config();
 
 const app = express();
 
-app.use(cors());
+// Configuração de CORS com origens permitidas
+const allowedOrigins = [
+  'http://localhost:3000',
+  'https://proagendify.vercel.app',
+];
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // Permitir requisições sem origem (como apps mobile ou Postman)
+      if (!origin) return callback(null, true);
+      
+      if (allowedOrigins.indexOf(origin) !== -1) {
+        callback(null, true);
+      } else {
+        console.warn(`Origem bloqueada pelo CORS: ${origin}`);
+        callback(new Error('Não permitido pelo CORS'), false);
+      }
+    },
+    credentials: true,
+  })
+);
+
 app.use(express.json());
 
 // Routes

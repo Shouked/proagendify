@@ -1,14 +1,15 @@
 import axios from 'axios';
+import { getSession } from 'next-auth/react';
 
 export const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
 });
 
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+api.interceptors.request.use(async (config) => {
+  const session = await getSession();
+  
+  if (session?.accessToken) {
+    config.headers.Authorization = `Bearer ${session.accessToken}`;
   }
 
   return config;
@@ -19,26 +20,12 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    if (error.response.status === 401 && !originalRequest._retry) {
+    if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
-      try {
-        const refreshToken = localStorage.getItem('refreshToken');
-        const response = await api.post('/auth/refresh-token', { token: refreshToken });
-
-        const { token } = response.data;
-
-        localStorage.setItem('token', token);
-
-        originalRequest.headers.Authorization = `Bearer ${token}`;
-
-        return api(originalRequest);
-      } catch (error) {
-        localStorage.removeItem('token');
-        localStorage.removeItem('refreshToken');
-
-        window.location.href = '/auth/login';
-      }
+      // Redirecionar para página de login se o token expirou
+      window.location.href = '/login?session=expired';
+      return Promise.reject(error);
     }
 
     return Promise.reject(error);
