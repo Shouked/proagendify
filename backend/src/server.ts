@@ -13,6 +13,7 @@ const app = express();
 const allowedOrigins = [
   'http://localhost:3000',
   'https://proagendify.vercel.app',
+  'https://proagendify-frontend.vercel.app'
 ];
 
 app.use(
