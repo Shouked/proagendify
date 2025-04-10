@@ -22,14 +22,21 @@ api.interceptors.request.use(
   async (config) => {
     // Apenas tentamos obter a sessão no navegador
     if (isBrowser) {
+      console.log('[API Interceptor] Tentando obter sessão para:', config.url);
       try {
         const session = await getSession();
+        console.log('[API Interceptor] Sessão obtida:', session);
         if (session?.accessToken) {
           config.headers.Authorization = `Bearer ${session.accessToken}`;
+          console.log('[API Interceptor] Cabeçalho Authorization adicionado.');
+        } else {
+          console.warn('[API Interceptor] Sessão encontrada, mas sem accessToken.');
         }
       } catch (error) {
-        console.error('Erro ao obter a sessão:', error);
+        console.error('[API Interceptor] Erro ao obter a sessão:', error);
       }
+    } else {
+      console.log('[API Interceptor] Não estamos no browser, pulando getSession.');
     }
     return config;
   },
