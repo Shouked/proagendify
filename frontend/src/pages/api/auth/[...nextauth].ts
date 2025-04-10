@@ -19,12 +19,18 @@ export default NextAuth({
           // Log para depuração
           console.log(`Fazendo login na API: ${process.env.NEXT_PUBLIC_API_URL}/auth/login`);
           
-          const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/auth/login`, {
+          // Garantir que a URL está correta, adicionando /api se necessário
+          const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+          const loginUrl = `${apiUrl}/api/auth/login`;
+          
+          console.log(`URL de login final: ${loginUrl}`);
+          
+          const response = await axios.post(loginUrl, {
             email: credentials.email,
             password: credentials.password,
           });
 
-          // Log para depuração
+          // Log para depuraçãotestar 
           console.log('Resposta da API:', JSON.stringify(response.data, null, 2));
 
           if (response.data && response.data.user) {

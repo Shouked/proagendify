@@ -22,6 +22,11 @@ app.use(
       // Permitir requisições sem origem (como apps mobile ou Postman)
       if (!origin) return callback(null, true);
       
+      // Permitir qualquer origem do Vercel (incluindo previews)
+      if (origin.includes('vercel.app')) {
+        return callback(null, true);
+      }
+      
       if (allowedOrigins.indexOf(origin) !== -1) {
         callback(null, true);
       } else {

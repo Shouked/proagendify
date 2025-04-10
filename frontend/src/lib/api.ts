@@ -1,9 +1,17 @@
 import axios from 'axios';
 import { getSession } from 'next-auth/react';
 
+// Garantir que a URL base tenha /api
+const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL;
+const baseURL = apiBaseUrl?.endsWith('/api') 
+  ? apiBaseUrl 
+  : `${apiBaseUrl}/api`;
+
+console.log(`Configurando API com baseURL: ${baseURL}`);
+
 // Criamos uma instância do axios
 export const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL,
+  baseURL,
 });
 
 // Flag para verificar se estamos no navegador
