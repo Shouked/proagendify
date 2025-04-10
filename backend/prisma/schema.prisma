@@ -37,7 +37,7 @@ model Client {
   name      String
   email      String
   phone      String
-  notes      String?
+  notes      String? ?
   tenantId      String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -52,7 +52,7 @@ model Service {
   name      String
   price      Float
   duration      Float
-  description      String?
+  description      String? ?
   tenantId      String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -70,7 +70,7 @@ model Appointment {
   serviceId  String
   date      DateTime
   status      Status     @default(scheduled)
-  notes      String?
+  notes      String? ?
   tenantId      String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
