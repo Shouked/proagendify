@@ -56,30 +56,50 @@ export default NextAuth({
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        // Adiciona valores do usuário ao token
-        token.id = user.id;
-        token.role = user.role;
-        token.tenantId = user.tenantId;
-        token.accessToken = user.token;
-        
-        // Log para depuração
-        console.log('Token JWT gerado:', JSON.stringify(token, null, 2));
+    async jwt({ token, user, account }) {
+      // Log inicial do token e user
+      console.log('[JWT Callback] Iniciando. Token recebido:', JSON.stringify(token, null, 2));
+      console.log('[JWT Callback] User recebido:', JSON.stringify(user, null, 2));
+      console.log('[JWT Callback] Account recebido:', JSON.stringify(account, null, 2));
+
+      // Na primeira vez (login), o objeto `user` está presente.
+      if (account && user) {
+        console.log('[JWT Callback] Login inicial detectado.');
+        // Retorna um novo objeto token com os dados necessários
+        return {
+          ...token, // Mantém propriedades existentes do token (como iat, exp)
+          id: user.id,
+          role: user.role,
+          tenantId: user.tenantId,
+          accessToken: user.token, // <- Pega o token do backend
+          accessTokenExpires: Date.now() + 24 * 60 * 60 * 1000, // Exemplo: 1 dia
+        };
       }
+
+      // Para requisições subsequentes, o `token` já existe.
+      // Podemos adicionar lógica de refresh token aqui se necessário.
+      console.log('[JWT Callback] Requisição subsequente. Token atual:', JSON.stringify(token, null, 2));
+      
+      // Retorna o token existente (ou atualizado, se houvesse refresh)
       return token;
     },
     async session({ session, token }) {
+      // Log inicial da sessão e token
+      console.log('[Session Callback] Iniciando. Sessão recebida:', JSON.stringify(session, null, 2));
+      console.log('[Session Callback] Token recebido (do callback jwt):', JSON.stringify(token, null, 2));
+
+      // Transfere dados do `token` (gerado pelo callback jwt) para o objeto `session`.
       if (token) {
-        // Adiciona valores do token à sessão
         session.user.id = token.id as string;
         session.user.role = token.role as string;
         session.user.tenantId = token.tenantId as string;
         session.accessToken = token.accessToken as string;
         
-        // Log para depuração
-        console.log('Sessão gerada:', JSON.stringify(session, null, 2));
+        console.log('[Session Callback] Sessão final a ser retornada:', JSON.stringify(session, null, 2));
+      } else {
+         console.error('[Session Callback] ERRO: Token não recebido do callback JWT!');
       }
+      
       return session;
     },
   },
