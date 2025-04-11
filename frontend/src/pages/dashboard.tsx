@@ -1,38 +1,22 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Head from 'next/head';
-import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/router';
+import { getUser, logout, withAuth } from '../lib/auth';
 
-export default function Dashboard() {
-  const { data: session, status } = useSession();
+function Dashboard() {
+  const [userName, setUserName] = useState<string>('');
   const router = useRouter();
 
-  // Redirecionar para o login se não estiver autenticado
-  React.useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.replace('/login');
+  useEffect(() => {
+    // Obter dados do usuário do nosso serviço
+    const user = getUser();
+    if (user) {
+      setUserName(user.name);
     }
-  }, [status, router]);
-
-  // Exibir loading enquanto verifica a sessão
-  if (status === 'loading') {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="spinner w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-          <p className="mt-4 text-gray-600">Carregando...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Se não estiver autenticado, não renderiza nada (será redirecionado pelo useEffect)
-  if (status === 'unauthenticated') {
-    return null;
-  }
+  }, []);
 
   const handleLogout = () => {
-    signOut({ callbackUrl: '/' });
+    logout(); // Usa nossa função de logout
   };
 
   return (
@@ -48,7 +32,7 @@ export default function Dashboard() {
             <span className="text-blue-600">ProAgendify</span>
           </h1>
           <div className="flex items-center">
-            <span className="mr-4 text-gray-700">Olá, {session?.user?.name || 'Usuário'}</span>
+            <span className="mr-4 text-gray-700">Olá, {userName || 'Usuário'}</span>
             <button
               onClick={handleLogout}
               className="px-4 py-2 rounded-md bg-gray-200 text-gray-700 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-300 transition-colors"
@@ -92,3 +76,6 @@ export default function Dashboard() {
     </div>
   );
 }
+
+// Proteger a página com nosso HOC de autenticação
+export default withAuth(Dashboard);

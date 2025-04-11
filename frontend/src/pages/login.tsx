@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
-import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
+import { login, isAuthenticated } from '../lib/auth';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -10,6 +10,14 @@ export default function Login() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+
+  // Redirecionar se já estiver autenticado
+  useEffect(() => {
+    if (isAuthenticated()) {
+      console.log('Login: Usuário já autenticado, redirecionando para dashboard');
+      router.push('/dashboard');
+    }
+  }, [router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -19,27 +27,22 @@ export default function Login() {
     console.log('Login: Iniciando processo de login com', email);
 
     try {
-      console.log('Login: Chamando NextAuth signIn');
-      const result = await signIn('credentials', {
-        redirect: false,
-        email,
-        password,
-      });
-
-      console.log('Login: Resultado do signIn', result);
-
-      if (result?.error) {
-        console.error('Login: Erro retornado pelo NextAuth:', result.error);
-        setError('Credenciais inválidas. Tente novamente.');
-        setIsLoading(false);
-        return;
-      }
-
-      console.log('Login: Sucesso, redirecionando para dashboard');
+      console.log('Login: Chamando API diretamente');
+      // Usar nosso serviço de autenticação em vez do NextAuth
+      await login(email, password);
+      
+      console.log('Login: Login bem-sucedido, redirecionando para dashboard');
       router.push('/dashboard');
-    } catch (err) {
-      console.error('Login: Exceção durante signIn:', err);
-      setError('Ocorreu um erro ao fazer login. Tente novamente.');
+    } catch (err: any) {
+      console.error('Login: Erro durante login:', err.message);
+      
+      // Exibir mensagem amigável baseada no erro
+      if (err.response?.status === 401) {
+        setError('Credenciais inválidas. Verifique seu email e senha.');
+      } else {
+        setError(`Erro ao fazer login: ${err.message}`);
+      }
+      
       setIsLoading(false);
     }
   };
