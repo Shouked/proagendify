@@ -16,21 +16,29 @@ export default function Login() {
     setError('');
     setIsLoading(true);
 
+    console.log('Login: Iniciando processo de login com', email);
+
     try {
+      console.log('Login: Chamando NextAuth signIn');
       const result = await signIn('credentials', {
         redirect: false,
         email,
         password,
       });
 
+      console.log('Login: Resultado do signIn', result);
+
       if (result?.error) {
+        console.error('Login: Erro retornado pelo NextAuth:', result.error);
         setError('Credenciais inválidas. Tente novamente.');
         setIsLoading(false);
         return;
       }
 
+      console.log('Login: Sucesso, redirecionando para dashboard');
       router.push('/dashboard');
     } catch (err) {
+      console.error('Login: Exceção durante signIn:', err);
       setError('Ocorreu um erro ao fazer login. Tente novamente.');
       setIsLoading(false);
     }
