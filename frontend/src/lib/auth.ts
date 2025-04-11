@@ -1,4 +1,5 @@
 import axios from 'axios';
+import React from 'react';
 
 const API_URL = 'https://proagendify.onrender.com/api';
 
@@ -78,8 +79,8 @@ export const isAuthenticated = (): boolean => {
 };
 
 // Função para verificar autenticação e redirecionar se necessário
-export const withAuth = (Component: React.ComponentType<any>): React.FC => {
-  const AuthComponent: React.FC = (props) => {
+export const withAuth = (Component: React.ComponentType<any>) => {
+  const AuthComponent = (props: any) => {
     // Verificar autenticação apenas no lado do cliente
     if (typeof window !== 'undefined') {
       if (!isAuthenticated()) {
@@ -89,7 +90,7 @@ export const withAuth = (Component: React.ComponentType<any>): React.FC => {
       }
     }
     
-    return <Component {...props} />;
+    return React.createElement(Component, props);
   };
   
   return AuthComponent;
