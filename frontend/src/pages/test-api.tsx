@@ -17,7 +17,8 @@ export default function TestApi() {
     setResponse(null);
     
     try {
-      const response = await axios.get(`${apiUrl}/`, {
+      const baseUrl = apiUrl.endsWith('/') ? apiUrl.slice(0, -1) : apiUrl;
+      const response = await axios.get(`${baseUrl}`, {
         headers: {
           'Content-Type': 'application/json'
         }
@@ -40,7 +41,8 @@ export default function TestApi() {
     setResponse(null);
     
     try {
-      const response = await axios.post(`${apiUrl}/auth/login`, {
+      const baseUrl = apiUrl.endsWith('/') ? apiUrl.slice(0, -1) : apiUrl;
+      const response = await axios.post(`${baseUrl}/api/auth/login`, {
         email,
         password
       }, {
@@ -74,7 +76,8 @@ export default function TestApi() {
     setResponse(null);
     
     try {
-      const response = await axios.get(`${apiUrl}/auth/me`, {
+      const baseUrl = apiUrl.endsWith('/') ? apiUrl.slice(0, -1) : apiUrl;
+      const response = await axios.get(`${baseUrl}/api/auth/me`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'

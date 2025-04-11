@@ -1,11 +1,11 @@
 import axios from 'axios';
 import { getSession } from 'next-auth/react';
 
-// Garantir que a URL base tenha /api
-const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL;
-const baseURL = apiBaseUrl?.endsWith('/api') 
-  ? apiBaseUrl 
-  : `${apiBaseUrl}/api`;
+// Garantir que a URL base esteja corretamente formatada
+const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || '';
+// Remove a barra no final, se existir
+const cleanUrl = apiBaseUrl.endsWith('/') ? apiBaseUrl.slice(0, -1) : apiBaseUrl;
+const baseURL = `${cleanUrl}/api`;
 
 console.log(`Configurando API com baseURL: ${baseURL}`);
 

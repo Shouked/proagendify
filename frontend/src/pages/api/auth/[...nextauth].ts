@@ -32,9 +32,11 @@ export default NextAuth({
           // Log para depuração
           console.log(`Fazendo login na API: ${process.env.NEXT_PUBLIC_API_URL}/auth/login`);
           
-          // Garantir que a URL está correta, adicionando /api se necessário
-          const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-          const loginUrl = `${apiUrl}/api/auth/login`;
+          // Garantir que a URL está correta, evitando barras duplas
+          const apiUrl = process.env.NEXT_PUBLIC_API_URL || '';
+          // Remove a barra no final, se existir
+          const baseUrl = apiUrl.endsWith('/') ? apiUrl.slice(0, -1) : apiUrl;
+          const loginUrl = `${baseUrl}/api/auth/login`;
           
           console.log(`URL de login final: ${loginUrl}`);
           
