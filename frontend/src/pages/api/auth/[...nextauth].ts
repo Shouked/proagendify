@@ -2,6 +2,19 @@ import NextAuth from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import axios from 'axios';
 
+// LOG DE DIAGNÓSTICO NO TOPO
+console.log('[NextAuth Init] Tentando inicializar...');
+console.log('[NextAuth Init] NEXTAUTH_SECRET presente?', !!process.env.NEXTAUTH_SECRET);
+console.log('[NextAuth Init] NEXTAUTH_URL:', process.env.NEXTAUTH_URL);
+console.log('[NextAuth Init] NEXT_PUBLIC_API_URL:', process.env.NEXT_PUBLIC_API_URL);
+
+if (!process.env.NEXTAUTH_SECRET) {
+  console.error('[NextAuth Init] ERRO FATAL: NEXTAUTH_SECRET não definido!');
+}
+if (!process.env.NEXTAUTH_URL) {
+  console.warn('[NextAuth Init] AVISO: NEXTAUTH_URL não definido!'); // Não é fatal, mas importante
+}
+
 export default NextAuth({
   providers: [
     CredentialsProvider({
