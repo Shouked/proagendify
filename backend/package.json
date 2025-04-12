@@ -6,7 +6,7 @@
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "prebuild": "echo Skipping prebuild steps",
     "build": "npx prisma generate && npx tsc --project tsconfig-render.json",
-    "postbuild": "mkdir -p dist/node_modules/.prisma && cp -r node_modules/.prisma/client dist/node_modules/.prisma/",
+    "postbuild": "mkdir -p dist/node_modules/@prisma && cp -r node_modules/@prisma/client dist/node_modules/@prisma/ && mkdir -p dist/node_modules/.prisma && cp -r node_modules/.prisma/client dist/node_modules/.prisma/",
     "start": "node dist/server.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
