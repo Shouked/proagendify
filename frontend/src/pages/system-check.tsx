@@ -128,8 +128,8 @@ export default function SystemCheck() {
               Certifique-se de que o CORS está configurado para permitir requisições do frontend.
             </li>
             <li>
-              Para testar o login, acesse a <Link href="/login" className="text-blue-600 hover:underline">
-                página de login
+              Para testar o login, acesse a <Link href="/login">
+                <a className="text-blue-600 hover:underline">página de login</a>
               </Link>.
             </li>
           </ul>
