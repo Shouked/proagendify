@@ -117,4 +117,11 @@ export default function DebugAuth() {
       </div>
     </div>
   );
+}
+
+// Forçar renderização no lado do servidor para evitar problemas com useSession durante build
+export async function getServerSideProps() {
+  return {
+    props: {}
+  };
 } 
