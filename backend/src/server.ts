@@ -4,6 +4,7 @@ import cors from 'cors';
 import { config } from 'dotenv';
 import { errorHandler } from './middlewares/errorHandler';
 import { routes } from './routes';
+import { env } from './lib/env';
 
 config();
 
@@ -46,7 +47,7 @@ app.use('/api', routes);
 // Error handling
 app.use(errorHandler);
 
-const PORT = process.env.PORT || 3333;
+const PORT = env.PORT;
 
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);

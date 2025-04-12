@@ -3,6 +3,7 @@ import { hash, compare } from 'bcryptjs';
 import { sign, verify } from 'jsonwebtoken';
 import { prisma } from '../lib/prisma';
 import { AppError } from '../errors/AppError';
+import { env } from '../lib/env';
 
 interface TokenPayload {
   id: string;
@@ -37,7 +38,7 @@ export class AuthController {
         role: user.role,
         tenantId: user.tenantId,
       },
-      process.env.JWT_SECRET as string,
+      env.JWT_SECRET,
       {
         subject: user.id,
         expiresIn: '1d',
@@ -85,7 +86,7 @@ export class AuthController {
         role: user.role,
         tenantId: user.tenantId,
       },
-      process.env.JWT_SECRET as string,
+      env.JWT_SECRET,
       {
         subject: user.id,
         expiresIn: '1d',
@@ -129,7 +130,7 @@ export class AuthController {
     const { token } = request.body;
 
     try {
-      const decoded = verify(token, process.env.JWT_SECRET as string) as TokenPayload;
+      const decoded = verify(token, env.JWT_SECRET) as TokenPayload;
 
       const user = await prisma.user.findUnique({
         where: { id: decoded.id },
@@ -145,7 +146,7 @@ export class AuthController {
           role: user.role,
           tenantId: user.tenantId,
         },
-        process.env.JWT_SECRET as string,
+        env.JWT_SECRET,
         {
           subject: user.id,
           expiresIn: '1d',

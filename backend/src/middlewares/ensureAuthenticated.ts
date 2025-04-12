@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { verify } from 'jsonwebtoken';
 import { AppError } from '../errors/AppError';
+import { env } from '../lib/env';
 
 interface TokenPayload {
   id: string;
@@ -24,7 +25,7 @@ export function ensureAuthenticated(
   const [, token] = authHeader.split(' ');
 
   try {
-    const decoded = verify(token, process.env.JWT_SECRET as string) as TokenPayload;
+    const decoded = verify(token, env.JWT_SECRET) as TokenPayload;
 
     request.user = {
       id: decoded.id,

@@ -4,6 +4,7 @@ import { userRoutes } from './user.routes';
 import { clientRoutes } from './client.routes';
 import { serviceRoutes } from './service.routes';
 import { appointmentRoutes } from './appointment.routes';
+import { env } from '../lib/env';
 
 const router = Router();
 
@@ -13,7 +14,7 @@ router.get('/health-check', (req, res) => {
     status: 'success',
     message: 'Backend está funcionando corretamente',
     timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development'
+    environment: env.NODE_ENV
   });
 });
 
