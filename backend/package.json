@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "prebuild": "echo Skipping prebuild steps",
-    "build": "npx tsc --project tsconfig-render.json",
+    "build": "npx prisma generate && npx tsc --project tsconfig-render.json",
+    "postbuild": "./render-build.sh",
     "start": "node dist/server.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
