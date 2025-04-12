@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSession, signIn, signOut } from 'next-auth/react';
-import { api } from '../lib/api';
+import api from '../lib/api';
 import Head from 'next/head';
 
 export default function DebugAuth() {
