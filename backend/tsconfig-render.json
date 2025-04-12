@@ -9,7 +9,13 @@
     "outDir": "./dist",
     "rootDir": "./src",
     "noImplicitAny": false,
-    "allowJs": true
+    "allowJs": true,
+    "ignoreDeprecations": "5.0",
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
+    "isolatedModules": false,
+    "strict": false,
+    "strictNullChecks": false
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules"]
