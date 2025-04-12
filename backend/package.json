@@ -5,8 +5,8 @@
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "prebuild": "echo Skipping prebuild steps",
-    "build": "npx tsc --project tsconfig-render.json && npx prisma generate",
-    "postbuild": "mkdir -p dist/node_modules/.prisma && cp -r node_modules/.prisma/client dist/node_modules/.prisma/",
+    "build": "npx prisma generate && npx tsc --project tsconfig-render.json",
+    "postbuild": "echo Build completed, Prisma client generated.",
     "start": "node dist/server.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",

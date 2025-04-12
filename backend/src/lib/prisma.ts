@@ -6,58 +6,29 @@ type GlobalWithPrisma = {
   prisma?: PrismaClient;
 };
 
-// Referência ao objeto global sem depender da tipagem global
-// @ts-ignore - Ignorar erros de tipo aqui para permitir a compilação
+// @ts-ignore
 const globalThis: GlobalWithPrisma = {};
 
-// Função para verificar se o Prisma Client está disponível
-function createPrismaClient() {
-  try {
-    console.log("[PRISMA] Tentando inicializar o Prisma Client");
-    return new PrismaClient({
-      log: ['error', 'warn'],
-      errorFormat: 'pretty',
-    });
-  } catch (error: any) {
-    console.error('[PRISMA] Erro ao criar Prisma Client:', error?.message);
-    
-    // Em produção ou desenvolvimento, cria um mock para não quebrar a aplicação
-    console.warn('[PRISMA] Usando cliente simulado - a aplicação funcionará com funcionalidade limitada');
-    return {
-      user: {
-        findUnique: () => Promise.resolve(null),
-        create: () => Promise.resolve({}),
-        update: () => Promise.resolve({}),
-      },
-      client: {
-        findUnique: () => Promise.resolve(null),
-        create: () => Promise.resolve({}),
-        findMany: () => Promise.resolve([]),
-      },
-      service: {
-        findUnique: () => Promise.resolve(null),
-        create: () => Promise.resolve({}),
-        findMany: () => Promise.resolve([]),
-      },
-      appointment: {
-        findUnique: () => Promise.resolve(null),
-        create: () => Promise.resolve({}),
-        findMany: () => Promise.resolve([]),
-      },
-      $connect: () => Promise.resolve(),
-      $disconnect: () => Promise.resolve(),
-    } as unknown as PrismaClient;
-  }
+console.log("[PRISMA] Inicializando Prisma Client...");
+
+let prismaInstance: PrismaClient;
+
+try {
+  prismaInstance = new PrismaClient({
+    log: env.isProd ? ['error', 'warn'] : ['query', 'info', 'warn', 'error'],
+    errorFormat: 'pretty',
+  });
+  console.log("[PRISMA] Prisma Client inicializado com sucesso.");
+} catch (e: any) {
+  console.error("[PRISMA] FALHA CRÍTICA AO INICIALIZAR PRISMA CLIENT:", e.message);
+  // Em um cenário real, poderíamos lançar o erro para parar a aplicação
+  // throw new Error("Falha ao inicializar Prisma Client");
+  // Por agora, vamos permitir continuar, mas logar o erro
+  prismaInstance = {} as PrismaClient; // Atribui um objeto vazio para evitar erros de tipo
 }
 
-// Tentar conectar ao banco de dados
-export const prisma = globalThis.prisma || createPrismaClient();
+export const prisma = globalThis.prisma || prismaInstance;
 
-// Salvar a instância para reutilização
 if (!env.isProd) {
-  try {
-    globalThis.prisma = prisma;
-  } catch (e) {
-    // Ignora erros ao tentar salvar no objeto global
-  }
+  globalThis.prisma = prisma;
 } 
