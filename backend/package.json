@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
-    "prebuild": "npm install --no-save @types/node",
-    "build": "npx tsc --project tsconfig-build.json",
+    "prebuild": "npm install -g @types/node && npm install --no-save @types/node",
+    "build": "npx tsc --project tsconfig-build.json --skipLibCheck",
     "start": "node dist/server.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
