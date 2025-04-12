@@ -3,14 +3,14 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
+    "dev": "ts-node-dev --exit-child --transpile-only --ignore-watch node_modules src/server.ts",
     "prebuild": "echo Skipping prebuild steps",
     "build": "npx prisma generate && npx tsc --project tsconfig-render.json",
-    "postbuild": "mkdir -p dist/node_modules/.prisma/client && cp -r node_modules/.prisma/client/* dist/node_modules/.prisma/client/",
+    "postbuild": "mkdir -p dist/node_modules/.prisma/client && cp -r node_modules/.prisma/client/* dist/node_modules/.prisma/client/ && mkdir -p dist/node_modules/@prisma && cp -r node_modules/@prisma dist/node_modules/",
     "start": "node dist/server.js",
-    "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev",
-    "prisma:studio": "prisma studio"
+    "migrate:dev": "prisma migrate dev",
+    "migrate:deploy": "prisma migrate deploy",
+    "generate": "prisma generate"
   },
   "dependencies": {
     "@prisma/client": "^6.6.0",
