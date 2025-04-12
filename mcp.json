@@ -1,0 +1,49 @@
+{
+  "models": [
+    {
+      "name": "User",
+      "fields": {
+        "id": "string",
+        "name": "string",
+        "email": "string",
+        "password": "string",
+        "role": "enum:superadmin|professional|client",
+        "tenantId": "string"
+      }
+    },
+    {
+      "name": "Client",
+      "fields": {
+        "id": "string",
+        "name": "string",
+        "email": "string",
+        "phone": "string",
+        "notes": "text",
+        "tenantId": "string"
+      }
+    },
+    {
+      "name": "Service",
+      "fields": {
+        "id": "string",
+        "name": "string",
+        "price": "number",
+        "duration": "number",
+        "description": "text",
+        "tenantId": "string"
+      }
+    },
+    {
+      "name": "Appointment",
+      "fields": {
+        "id": "string",
+        "clientId": "foreign:Client",
+        "serviceId": "foreign:Service",
+        "date": "datetime",
+        "status": "enum:scheduled|completed|canceled",
+        "notes": "text",
+        "tenantId": "string"
+      }
+    }
+  ]
+}

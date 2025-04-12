@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: proagendify-backend
+    env: node
+    buildCommand: cd backend && npm install && npx prisma generate && npm run build
+    startCommand: cd backend && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3333
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: REDIS_URL
+        value: redis://redis:6379
+      - key: JWT_EXPIRES_IN
+        value: 1d 
