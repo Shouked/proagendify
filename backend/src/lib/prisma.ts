@@ -1,34 +1,21 @@
 import { PrismaClient } from '@prisma/client';
-import { env } from './env';
-
-// Para evitar problemas de tipos
-type GlobalWithPrisma = {
-  prisma?: PrismaClient;
-};
-
-// @ts-ignore
-const globalThis: GlobalWithPrisma = {};
+import { env } from './env'; // Para controle de logs
 
 console.log("[PRISMA] Inicializando Prisma Client...");
 
-let prismaInstance: PrismaClient;
+let prisma: PrismaClient;
 
 try {
-  prismaInstance = new PrismaClient({
+  prisma = new PrismaClient({
     log: env.isProd ? ['error', 'warn'] : ['query', 'info', 'warn', 'error'],
     errorFormat: 'pretty',
   });
   console.log("[PRISMA] Prisma Client inicializado com sucesso.");
 } catch (e: any) {
   console.error("[PRISMA] FALHA CRÍTICA AO INICIALIZAR PRISMA CLIENT:", e.message);
-  // Em um cenário real, poderíamos lançar o erro para parar a aplicação
-  // throw new Error("Falha ao inicializar Prisma Client");
-  // Por agora, vamos permitir continuar, mas logar o erro
-  prismaInstance = {} as PrismaClient; // Atribui um objeto vazio para evitar erros de tipo
+  // Lançar o erro para parar a aplicação se a inicialização falhar
+  throw new Error(`Falha ao inicializar Prisma Client: ${e.message}`);
 }
 
-export const prisma = globalThis.prisma || prismaInstance;
-
-if (!env.isProd) {
-  globalThis.prisma = prisma;
-} 
+// Exportar a instância inicializada
+export { prisma }; 
