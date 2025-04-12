@@ -1,5 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import { env } from './env'; // Para controle de logs
+import * as fs from 'fs';
+import * as path from 'path';
 
 console.log("[PRISMA] Inicializando Prisma Client...");
 
@@ -24,8 +26,22 @@ try {
       process.env.PRISMA_QUERY_ENGINE_LIBRARY = "/opt/render/project/src/backend/node_modules/.prisma/client/libquery_engine-linux-musl-openssl-3.0.x.so.node";
       process.env.PRISMA_SCHEMA_ENGINE_LIBRARY = "/opt/render/project/src/backend/node_modules/.prisma/client/libquery_engine-linux-musl-openssl-3.0.x.so.node";
       
+      // Verificar a existência dos arquivos para diagnóstico
+      try {
+        const enginePath = "/opt/render/project/src/backend/node_modules/.prisma/client";
+        console.log("[PRISMA] Verificando arquivos em:", enginePath);
+        if (fs.existsSync(enginePath)) {
+          const files = fs.readdirSync(enginePath);
+          console.log("[PRISMA] Arquivos encontrados:", files);
+        } else {
+          console.log("[PRISMA] Diretório não encontrado:", enginePath);
+        }
+      } catch (fsError: any) {
+        console.error("[PRISMA] Erro ao listar arquivos:", fsError.message);
+      }
+      
       // Redefinir PrismaClient para evitar problemas de cache
-      const { PrismaClient: PrismaClientRetry } = require('@prisma/client');
+      const PrismaClientRetry = PrismaClient;
       prisma = new PrismaClientRetry({
         log: ['error', 'warn'],
         errorFormat: 'pretty',
