@@ -1,7 +1,7 @@
 generator client {
   provider      = "prisma-client-js"
   output        = "../node_modules/.prisma/client"
-  binaryTargets = ["linux-musl-openssl-3.0.x"]
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
   engineType    = "binary"
 }
 
@@ -23,12 +23,12 @@ enum Status {
 }
 
 model User {
-  id      String @id @default(uuid())
+  id        String   @id @default(uuid())
   name      String
-  email      String @unique
-  password      String
+  email     String   @unique
+  password  String
   role      Role     @default(superadmin)
-  tenantId      String
+  tenantId  String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -36,45 +36,43 @@ model User {
 }
 
 model Client {
-  id      String @id @default(uuid())
-  name      String
-  email      String
-  phone      String
-  notes      String?
-  tenantId      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
+  id           String      @id @default(uuid())
+  name         String
+  email        String
+  phone        String
+  notes        String?
+  tenantId     String
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
   appointments Appointment[]
 
   @@index([tenantId])
 }
 
 model Service {
-  id      String @id @default(uuid())
-  name      String
-  price      Float
-  duration      Float
-  description      String?
-  tenantId      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
+  id           String      @id @default(uuid())
+  name         String
+  price        Float
+  duration     Float
+  description  String?
+  tenantId     String
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
   appointments Appointment[]
 
   @@index([tenantId])
 }
 
 model Appointment {
-  id      String @id @default(uuid())
-  client    Client          @relation(fields: [clientId], references: [id])
+  id        String   @id @default(uuid())
+  client    Client   @relation(fields: [clientId], references: [id])
   clientId  String
-  service    Service          @relation(fields: [serviceId], references: [id])
-  serviceId  String
+  service   Service  @relation(fields: [serviceId], references: [id])
+  serviceId String
   date      DateTime
-  status      Status     @default(scheduled)
-  notes      String?
-  tenantId      String
+  status    Status   @default(scheduled)
+  notes     String?
+  tenantId  String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -82,4 +80,3 @@ model Appointment {
   @@index([clientId])
   @@index([serviceId])
 }
-
