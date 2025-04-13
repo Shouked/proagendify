@@ -6,7 +6,7 @@
     "dev": "ts-node-dev --exit-child --transpile-only --ignore-watch node_modules src/server.ts",
     "prebuild": "echo Skipping prebuild steps",
     "build": "npx prisma generate && npx tsc --project tsconfig-render.json",
-    "postbuild": "mkdir -p dist/node_modules/.prisma/client && cp -r node_modules/.prisma/client/* dist/node_modules/.prisma/client/",
+    "postbuild": "mkdir -p dist/node_modules/.prisma/client && cp -r node_modules/.prisma/client/* dist/node_modules/.prisma/client/ && cp -r prisma dist/",
     "start": "node dist/server.js",
     "migrate:dev": "prisma migrate dev",
     "migrate:deploy": "prisma migrate deploy",
