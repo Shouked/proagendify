@@ -16,7 +16,16 @@ npm install
 
 # Gerar o Prisma Client
 echo "Gerando Prisma Client..."
-npx prisma generate
+SKIP_PRISMA_CONNECT=true npx prisma generate
+
+# Verificar se o Prisma Client foi gerado corretamente
+if [ ! -f "node_modules/.prisma/client/index.js" ]; then
+  echo "ERRO: Prisma Client não foi gerado corretamente!"
+  exit 1
+fi
+
+echo "Verificando binário do Prisma..."
+ls -la node_modules/.prisma/client/
 
 # Executar migrações do banco de dados em produção
 if [ "$NODE_ENV" = "production" ]; then
@@ -37,7 +46,11 @@ mkdir -p dist/prisma
 cp node_modules/.prisma/client/query-engine-linux-musl-openssl-3.0.x dist/prisma/
 chmod +x dist/prisma/query-engine-linux-musl-openssl-3.0.x
 
-echo "Verificando binário copiado:"
+# Copiar schema.prisma para o diretório de distribuição
+echo "Copiando schema.prisma..."
+cp prisma/schema.prisma dist/prisma/
+
+echo "Verificando arquivos copiados:"
 ls -la dist/prisma/
 
 echo "Build concluído com sucesso!"

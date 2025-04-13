@@ -7,7 +7,7 @@
     "prebuild": "echo Skipping prebuild steps",
     "build": "npx prisma generate && npx tsc --project tsconfig-render.json",
     "postbuild": "mkdir -p dist/prisma && cp node_modules/.prisma/client/query-engine-linux-musl-openssl-3.0.x dist/prisma/query-engine-linux-musl-openssl-3.0.x && chmod +x dist/prisma/query-engine-linux-musl-openssl-3.0.x && ls -l dist/prisma",
-    "start": "npx prisma migrate deploy && node dist/server.js",
+    "start": "NODE_ENV=production node dist/server.js",
     "migrate:dev": "prisma migrate dev",
     "migrate:deploy": "prisma migrate deploy",
     "generate": "prisma generate"

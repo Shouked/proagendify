@@ -4,7 +4,7 @@ services:
     env: node
     region: sao1
     buildCommand: cd backend && npm install && chmod +x render-build.sh && ./render-build.sh
-    startCommand: cd backend && npm start
+    startCommand: cd backend && npx prisma migrate deploy && npm start
     envVars:
       - key: NODE_ENV
         value: production
@@ -22,4 +22,6 @@ services:
         sync: false
       - key: ALLOWED_ORIGINS
         value: https://proagendify-frontend.vercel.app,https://proagendify.vercel.app
+      - key: FRONTEND_URL
+        value: https://proagendify-frontend.vercel.app
     healthCheckPath: /api/health-check 
