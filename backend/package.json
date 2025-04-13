@@ -1,56 +1,35 @@
-import { PrismaClient } from '@prisma/client';
-import { existsSync } from 'fs';
-import { join } from 'path';
-
-console.log("[PRISMA] Inicializando Prisma Client...");
-
-// Registrar informações do ambiente
-console.log("[PRISMA] Ambiente de execução:");
-console.log(`  - NODE_ENV: ${process.env.NODE_ENV}`);
-console.log(`  - __dirname: ${__dirname}`);
-console.log(`  - process.cwd(): ${process.cwd()}`);
-
-// Definir o caminho do binário
-const clientPath = process.env.NODE_ENV === 'production'
-  ? '/opt/render/project/src/backend/dist/prisma'
-  : join(__dirname, '../node_modules/.prisma/client');
-
-const enginePath = join(clientPath, 'query-engine-linux-musl-openssl-3.0.x');
-
-if (!existsSync(enginePath)) {
-  console.error(`[PRISMA] ERRO: Binário não encontrado em ${enginePath}`);
-  throw new Error(`Prisma binary not found at ${enginePath}`);
-} else {
-  console.log(`[PRISMA] Binário encontrado: ${enginePath}`);
-  process.env.PRISMA_QUERY_ENGINE_BINARY = enginePath;
-}
-
-// Inicializar o Prisma Client
-const prisma = new PrismaClient({
-  log: ['query', 'info', 'warn', 'error'],
-  errorFormat: 'pretty',
-});
-
-// Função para inicializar e testar a conexão
-async function initializePrisma() {
-  try {
-    console.log("[PRISMA] Testando conexão com o banco...");
-    await prisma.$connect();
-    console.log("[PRISMA] Conexão com o banco estabelecida com sucesso!");
-
-    console.log("[PRISMA] Testando consulta ao modelo User...");
-    await prisma.user.count();
-    console.log("[PRISMA] Consulta ao modelo User bem-sucedida!");
-  } catch (err) {
-    console.error("[PRISMA] FALHA NA INICIALIZAÇÃO:", err);
-    throw new Error(`Falha na inicialização do Prisma Client: ${err.message}`);
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "ts-node-dev --exit-child --transpile-only --ignore-watch node_modules src/server.ts",
+    "prebuild": "echo Skipping prebuild steps",
+    "build": "npx prisma generate && npx tsc --project tsconfig-render.json",
+    "postbuild": "mkdir -p dist/prisma && cp node_modules/.prisma/client/query-engine-linux-musl-openssl-3.0.x dist/prisma/query-engine-linux-musl-openssl-3.0.x && chmod +x dist/prisma/query-engine-linux-musl-openssl-3.0.x && ls -l dist/prisma",
+    "start": "npx prisma migrate deploy && node dist/server.js",
+    "migrate:dev": "prisma migrate dev",
+    "migrate:deploy": "prisma migrate deploy",
+    "generate": "prisma generate"
+  },
+  "dependencies": {
+    "@prisma/client": "6.6.0",
+    "@types/node": "^20.17.30",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "express-async-errors": "^3.1.1",
+    "jsonwebtoken": "^9.0.2",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/jsonwebtoken": "^9.0.9",
+    "prisma": "6.6.0",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.3.3"
   }
 }
-
-// Executar inicialização
-initializePrisma().catch((err) => {
-  console.error("[PRISMA] Erro crítico:", err);
-  process.exit(1);
-});
-
-export { prisma };
