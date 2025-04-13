@@ -19,28 +19,38 @@ const enginePath = join(clientPath, 'query-engine-linux-musl-openssl-3.0.x');
 
 if (!existsSync(enginePath)) {
   console.error(`[PRISMA] ERRO: Binário não encontrado em ${enginePath}`);
+  throw new Error(`Prisma binary not found at ${enginePath}`);
 } else {
   console.log(`[PRISMA] Binário encontrado: ${enginePath}`);
   process.env.PRISMA_QUERY_ENGINE_BINARY = enginePath;
 }
 
 // Inicializar o Prisma Client
-let prisma: PrismaClient;
+const prisma = new PrismaClient({
+  log: ['query', 'info', 'warn', 'error'],
+  errorFormat: 'pretty',
+});
 
-try {
-  console.log("[PRISMA] Tentando inicializar PrismaClient...");
-  prisma = new PrismaClient({
-    log: ['query', 'info', 'warn', 'error'],
-    errorFormat: 'pretty',
-  });
+// Função para inicializar e testar a conexão
+async function initializePrisma() {
+  try {
+    console.log("[PRISMA] Testando conexão com o banco...");
+    await prisma.$connect();
+    console.log("[PRISMA] Conexão com o banco estabelecida com sucesso!");
 
-  // Testar conexão com o banco
-  console.log("[PRISMA] Testando conexão com o banco...");
-  await prisma.$connect();
-  console.log("[PRISMA] Conexão com o banco estabelecida com sucesso!");
-} catch (err) {
-  console.error("[PRISMA] FALHA NA INICIALIZAÇÃO:", err);
-  throw new Error(`Falha na inicialização do Prisma Client: ${err.message}`);
+    console.log("[PRISMA] Testando consulta ao modelo User...");
+    await prisma.user.count();
+    console.log("[PRISMA] Consulta ao modelo User bem-sucedida!");
+  } catch (err) {
+    console.error("[PRISMA] FALHA NA INICIALIZAÇÃO:", err);
+    throw new Error(`Falha na inicialização do Prisma Client: ${err.message}`);
+  }
 }
+
+// Executar inicialização
+initializePrisma().catch((err) => {
+  console.error("[PRISMA] Erro crítico:", err);
+  process.exit(1);
+});
 
 export { prisma };
