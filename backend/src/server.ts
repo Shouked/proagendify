@@ -14,7 +14,7 @@ const app = express();
 const allowedOrigins = [
   'http://localhost:3000',
   'https://proagendify.vercel.app',
-  'https://proagendify-frontend.vercel.app'
+  'https://proagendify-frontend.vercel.app',
 ];
 
 app.use(
@@ -22,12 +22,12 @@ app.use(
     origin: function (origin, callback) {
       // Permitir requisições sem origem (como apps mobile ou Postman)
       if (!origin) return callback(null, true);
-      
+
       // Permitir qualquer origem do Vercel (incluindo previews)
       if (origin && (origin.includes('vercel.app') || origin.includes('localhost'))) {
         return callback(null, true);
       }
-      
+
       if (allowedOrigins.indexOf(origin) !== -1) {
         callback(null, true);
       } else {
@@ -36,7 +36,7 @@ app.use(
       }
     },
     credentials: true,
-  })
+  }),
 );
 
 app.use(express.json());
@@ -47,8 +47,8 @@ app.use('/api', routes);
 // Error handling
 app.use(errorHandler);
 
-const PORT = env.PORT;
+const PORT = env.PORT || 3333;
 
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
-}); 
+});
