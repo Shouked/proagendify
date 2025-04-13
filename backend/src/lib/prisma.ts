@@ -1,84 +1,99 @@
 import { PrismaClient } from '@prisma/client';
-import { env } from './env'; // Para controle de logs
-import * as fs from 'fs';
-import * as path from 'path';
+import { env } from './env';
+import { statSync, readdirSync, existsSync, chmodSync } from 'fs';
+import { join, resolve } from 'path';
 
 console.log("[PRISMA] Inicializando Prisma Client...");
 
-// Verificar arquivos presentes para diagnóstico
-try {
-  const clientPath = path.join(__dirname, '../node_modules/.prisma/client');
-  console.log(`[PRISMA] Verificando arquivos em: ${clientPath}`);
-  
-  if (fs.existsSync(clientPath)) {
-    const files = fs.readdirSync(clientPath);
-    console.log(`[PRISMA] Arquivos encontrados (${files.length}):`, files);
+// Registrar informações do ambiente
+console.log("[PRISMA] Ambiente de execução:");
+console.log(`  - NODE_ENV: ${process.env.NODE_ENV}`);
+console.log(`  - __dirname: ${__dirname}`);
+console.log(`  - process.cwd(): ${process.cwd()}`);
 
-    // Verificar binários específicos - agora procurando pelo nome sem extensão também
-    const binaryFiles = files.filter(f => 
-      f.includes('query-engine') || 
-      f.includes('.so.node') || 
-      f.includes('.dll') || 
-      f.includes('.dylib')
-    );
-    console.log(`[PRISMA] Binários encontrados (${binaryFiles.length}):`, binaryFiles);
-    
-    // Configurar o Prisma para usar o binário correto
-    if (binaryFiles.length > 0) {
-      const linuxEngine = binaryFiles.find(f => f.includes('linux-musl') || f.includes('debian'));
-      if (linuxEngine) {
-        console.log(`[PRISMA] Configurando para usar o binário: ${linuxEngine}`);
-        process.env.PRISMA_QUERY_ENGINE_BINARY = path.join(clientPath, linuxEngine);
-        // Esta variável é importante para o Prisma encontrar o binário
-        process.env.PRISMA_QUERY_ENGINE_LIBRARY = path.join(clientPath, linuxEngine);
-      }
-    }
-  } else {
-    console.log("[PRISMA] Diretório do cliente não encontrado!");
+// Definir possíveis caminhos onde o Prisma Client pode estar
+const possiblePaths = [
+  join(__dirname, '../node_modules/.prisma/client'),
+  join(process.cwd(), 'node_modules/.prisma/client'),
+  '/opt/render/project/src/backend/node_modules/.prisma/client',
+  '/opt/render/project/src/node_modules/.prisma/client'
+];
+
+// Encontrar o primeiro caminho válido
+let clientPath = '';
+for (const path of possiblePaths) {
+  if (existsSync(path)) {
+    clientPath = path;
+    console.log(`[PRISMA] Diretório do cliente encontrado: ${clientPath}`);
+    break;
   }
-} catch (e: any) {
-  console.error("[PRISMA] Erro ao verificar arquivos:", e.message);
 }
 
-// Força carregar o prisma/client da raiz do projeto ao invés do dist
-process.env.NODE_PATH = path.join(__dirname, '../..');
-require('module').Module._initPaths();
+if (!clientPath) {
+  console.error("[PRISMA] ERRO: Nenhum diretório do cliente Prisma encontrado!");
+} else {
+  // Verificar arquivos no diretório
+  try {
+    const files = readdirSync(clientPath);
+    console.log(`[PRISMA] Arquivos encontrados (${files.length}):`, files);
 
-// Inicializar o Prisma Client
+    // Verificar e corrigir permissões dos binários
+    const engineFiles = files.filter(f => f.startsWith('query-engine-'));
+    if (engineFiles.length > 0) {
+      console.log(`[PRISMA] Motores de consulta encontrados (${engineFiles.length}):`, engineFiles);
+      
+      // Verificar permissões
+      engineFiles.forEach(file => {
+        const filePath = join(clientPath, file);
+        try {
+          const stats = statSync(filePath);
+          const isExecutable = !!(stats.mode & 0o111);
+          console.log(`[PRISMA] Engine ${file}: Tamanho=${stats.size}, Executável=${isExecutable}, Modo=${stats.mode.toString(8)}`);
+          
+          // Forçar permissões executáveis
+          if (!isExecutable) {
+            chmodSync(filePath, 0o755);
+            console.log(`[PRISMA] Permissões aplicadas a ${file}`);
+          }
+        } catch (statErr) {
+          console.error(`[PRISMA] Erro ao verificar ${file}:`, statErr);
+        }
+      });
+      
+      // Definir variáveis de ambiente para ajudar o Prisma a encontrar o binário
+      const linuxEngine = engineFiles.find(f => f.includes('linux-musl-openssl-3.0.x'));
+      if (linuxEngine) {
+        const enginePath = join(clientPath, linuxEngine);
+        console.log(`[PRISMA] Configurando engine: ${enginePath}`);
+        process.env.PRISMA_QUERY_ENGINE_BINARY = enginePath;
+        process.env.PRISMA_QUERY_ENGINE_LIBRARY = enginePath;
+      }
+    } else {
+      console.error("[PRISMA] AVISO: Nenhum motor de consulta encontrado!");
+    }
+  } catch (fsErr) {
+    console.error("[PRISMA] Erro ao listar arquivos:", fsErr);
+  }
+}
+
+// Inicialização simplificada
 let prisma: PrismaClient;
 
 try {
-  // Adiciona um pequeno atraso para garantir que tudo esteja configurado
-  setTimeout(() => {
-    console.log("[PRISMA] Ambiente preparado, configurações aplicadas.");
-  }, 500);
+  console.log("[PRISMA] Tentando inicializar PrismaClient...");
   
+  // Opções de configuração com logs simplificados
   prisma = new PrismaClient({
-    log: env.isProd ? ['error', 'warn'] : ['query', 'info', 'warn', 'error'],
+    log: ['error', 'warn'],
     errorFormat: 'pretty',
   });
-  console.log("[PRISMA] Prisma Client inicializado com sucesso.");
-} catch (e: any) {
-  console.error("[PRISMA] FALHA CRÍTICA AO INICIALIZAR PRISMA CLIENT:", e.message);
-  console.error("[PRISMA] Stack trace:", e.stack);
   
-  // Tentativa alternativa com __dirname absoluto
-  try {
-    console.log("[PRISMA] Tentando abordagem alternativa de inicialização...");
-    process.env.PRISMA_QUERY_ENGINE_LIBRARY = path.resolve('/opt/render/project/src/backend/node_modules/.prisma/client/query-engine-linux-musl-openssl-3.0.x');
-    
-    // Carregar o cliente diretamente do node_modules raiz
-    const { PrismaClient: PrismaFallback } = require('/opt/render/project/src/node_modules/@prisma/client');
-    prisma = new PrismaFallback({
-      log: ['error', 'warn'],
-      errorFormat: 'pretty',
-    });
-    console.log("[PRISMA] Inicialização alternativa bem-sucedida!");
-  } catch (fallbackError: any) {
-    console.error("[PRISMA] Falha na inicialização alternativa:", fallbackError.message);
-    throw new Error(`Falha ao inicializar Prisma Client: ${e.message}`);
-  }
+  console.log("[PRISMA] PrismaClient inicializado com sucesso!");
+} catch (err: any) {
+  console.error("[PRISMA] FALHA NA INICIALIZAÇÃO:", err.message);
+  console.error("[PRISMA] Stack trace:", err.stack);
+  
+  throw new Error(`Falha na inicialização do Prisma Client: ${err.message}`);
 }
 
-// Exportar a instância inicializada
 export { prisma }; 

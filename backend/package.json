@@ -6,14 +6,14 @@
     "dev": "ts-node-dev --exit-child --transpile-only --ignore-watch node_modules src/server.ts",
     "prebuild": "echo Skipping prebuild steps",
     "build": "npx prisma generate && npx tsc --project tsconfig-render.json",
-    "postbuild": "mkdir -p dist/node_modules/.prisma/client && cp -r node_modules/.prisma/client/* dist/node_modules/.prisma/client/ && cp -r prisma dist/",
+    "postbuild": "mkdir -p dist/node_modules/.prisma/client && cp -r node_modules/.prisma/client/* dist/node_modules/.prisma/client/ && find dist/node_modules/.prisma/client -name 'query-engine-*' -exec chmod +x {} \\;",
     "start": "node dist/server.js",
     "migrate:dev": "prisma migrate dev",
     "migrate:deploy": "prisma migrate deploy",
     "generate": "prisma generate"
   },
   "dependencies": {
-    "@prisma/client": "^6.6.0",
+    "@prisma/client": "6.5.0",
     "@types/node": "^20.17.30",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
@@ -28,7 +28,7 @@
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
     "@types/jsonwebtoken": "^9.0.9",
-    "prisma": "^6.6.0",
+    "prisma": "6.5.0",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.3.3"
   }
