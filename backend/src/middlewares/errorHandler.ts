@@ -1,32 +1,27 @@
 import { Request, Response, NextFunction } from 'express';
-import { ZodError } from 'zod';
 import { AppError } from '../errors/AppError';
+import { ZodError } from 'zod';
 
-export function errorHandler(
-  error: Error,
-  request: Request,
-  response: Response,
-  next: NextFunction,
-) {
-  if (error instanceof AppError) {
-    return response.status(error.statusCode).json({
-      status: 'error',
-      message: error.message,
-    });
-  }
+export function errorHandler(err: any, req: Request, res: Response, next: NextFunction) {
+  console.error('[ErrorHandler] Erro capturado:', err);
 
-  if (error instanceof ZodError) {
-    return response.status(400).json({
+  if (err instanceof ZodError) {
+    return res.status(400).json({
       status: 'error',
       message: 'Validation error',
-      errors: error.errors,
+      errors: err.errors,
     });
   }
 
-  console.error(error);
+  if (err instanceof AppError) {
+    return res.status(err.statusCode).json({
+      status: 'error',
+      message: err.message,
+    });
+  }
 
-  return response.status(500).json({
+  return res.status(500).json({
     status: 'error',
     message: 'Internal server error',
   });
-} 
+}
