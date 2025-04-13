@@ -7,9 +7,14 @@ import { useAuth } from '../components/AuthProvider';
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const { login, isAuthenticated, isLoading } = useAuth();
+  const [localError, setLocalError] = useState('');
+  const { login, isAuthenticated, isLoading, error, clearError } = useAuth();
   const router = useRouter();
+
+  // Limpar erros quando o componente montar
+  useEffect(() => {
+    clearError();
+  }, [clearError]);
 
   // Redirecionar se já estiver autenticado
   useEffect(() => {
@@ -21,7 +26,13 @@ export default function Login() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setLocalError('');
+    clearError();
+
+    if (!email || !password) {
+      setLocalError('Por favor, preencha todos os campos');
+      return;
+    }
 
     console.log('Login: Iniciando processo de login com', email);
 
@@ -36,12 +47,17 @@ export default function Login() {
       
       // Exibir mensagem amigável baseada no erro
       if (err.response?.status === 401) {
-        setError('Credenciais inválidas. Verifique seu email e senha.');
+        setLocalError('Credenciais inválidas. Verifique seu email e senha.');
+      } else if (err.response?.data?.message) {
+        setLocalError(`Erro: ${err.response.data.message}`);
       } else {
-        setError(`Erro ao fazer login: ${err.message}`);
+        setLocalError(`Erro ao fazer login: ${err.message || 'Falha de conexão'}`);
       }
     }
   };
+
+  // Usar erro do contexto ou erro local
+  const displayError = error || localError;
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 px-4">
@@ -59,9 +75,9 @@ export default function Login() {
         </div>
 
         <div className="bg-white p-8 rounded-lg shadow-md">
-          {error && (
+          {displayError && (
             <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-md border border-red-200">
-              {error}
+              {displayError}
             </div>
           )}
 
@@ -110,9 +126,9 @@ export default function Login() {
               </div>
 
               <div className="text-sm">
-                <a href="#" className="text-blue-600 hover:text-blue-500">
+                <Link href="/forgot-password" className="text-blue-600 hover:text-blue-500">
                   Esqueceu sua senha?
-                </a>
+                </Link>
               </div>
             </div>
 

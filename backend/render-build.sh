@@ -18,6 +18,15 @@ npm install
 echo "Gerando Prisma Client..."
 npx prisma generate
 
+# Executar migrações do banco de dados em produção
+if [ "$NODE_ENV" = "production" ]; then
+  echo "Executando migrações do banco de dados..."
+  npx prisma migrate deploy
+  echo "Migrações concluídas com sucesso!"
+else
+  echo "Ambiente não é produção. Pulando migrações do banco de dados."
+fi
+
 # Compilar TypeScript
 echo "Compilando TypeScript..."
 npx tsc --project tsconfig-render.json

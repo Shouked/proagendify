@@ -6,11 +6,7 @@
     "dev": "ts-node-dev --exit-child --transpile-only --ignore-watch node_modules src/server.ts",
     "prebuild": "echo Skipping prebuild steps",
     "build": "npx prisma generate && npx tsc --project tsconfig-render.json",
-<<<<<<< HEAD
     "postbuild": "mkdir -p dist/prisma && cp node_modules/.prisma/client/query-engine-linux-musl-openssl-3.0.x dist/prisma/query-engine-linux-musl-openssl-3.0.x && chmod +x dist/prisma/query-engine-linux-musl-openssl-3.0.x && ls -l dist/prisma",
-=======
-    "postbuild": "mkdir -p dist/prisma && cp node_modules/.prisma/client/query-engine-linux-musl-openssl-3.0.x dist/prisma/query-engine-linux-musl-openssl-3.0.x && chmod +x dist/prisma/query-engine-linux-musl-openssl-3.0.x",
->>>>>>> 45a7b7d (Corrige a estrutura do projeto e ajusta configurações de build para o Render)
     "start": "npx prisma migrate deploy && node dist/server.js",
     "migrate:dev": "prisma migrate dev",
     "migrate:deploy": "prisma migrate deploy",

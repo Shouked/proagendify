@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { verify } from 'jsonwebtoken';
+import { verify, TokenExpiredError } from 'jsonwebtoken';
 import { AppError } from '../errors/AppError';
 import { env } from '../lib/env';
 
@@ -22,7 +22,11 @@ export function ensureAuthenticated(
     throw new AppError('JWT token is missing', 401);
   }
 
-  const [, token] = authHeader.split(' ');
+  const [scheme, token] = authHeader.split(' ');
+  
+  if (!/^Bearer$/i.test(scheme)) {
+    throw new AppError('Token malformatted', 401);
+  }
 
   try {
     const decoded = verify(token, env.JWT_SECRET) as TokenPayload;
@@ -34,7 +38,10 @@ export function ensureAuthenticated(
     };
 
     return next();
-  } catch {
+  } catch (error) {
+    if (error instanceof TokenExpiredError) {
+      throw new AppError('Token expired', 401);
+    }
     throw new AppError('Invalid JWT token', 401);
   }
 } 

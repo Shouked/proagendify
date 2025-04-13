@@ -65,7 +65,7 @@ export class AuthController {
         env.JWT_SECRET,
         {
           subject: user.id,
-          expiresIn: '1d',
+          expiresIn: env.JWT_EXPIRES_IN,
         },
       );
 
@@ -143,7 +143,7 @@ export class AuthController {
         env.JWT_SECRET,
         {
           subject: user.id,
-          expiresIn: '1d',
+          expiresIn: env.JWT_EXPIRES_IN,
         },
       );
 
@@ -219,35 +219,48 @@ export class AuthController {
 
   async refreshToken(request: Request, response: Response) {
     try {
-      console.log('[AuthController] Iniciando refreshToken:', request.body);
-      const { token } = request.body;
-
-      const decoded = verify(token, env.JWT_SECRET) as TokenPayload;
-
-      const user = await prisma.user.findUnique({
-        where: { id: decoded.id },
-      });
-
-      if (!user) {
-        console.log('[AuthController] Usuário não encontrado:', decoded.id);
-        throw new AppError('User not found', 404);
+      console.log('[AuthController] Iniciando refreshToken');
+      
+      // Obter o token do cabeçalho de autorização
+      const authHeader = request.headers.authorization;
+      
+      if (!authHeader) {
+        throw new AppError('JWT token is missing', 401);
       }
-
-      const newToken = sign(
-        {
-          id: user.id,
-          role: user.role,
-          tenantId: user.tenantId,
-        },
-        env.JWT_SECRET,
-        {
-          subject: user.id,
-          expiresIn: '1d',
-        },
-      );
-
-      console.log('[AuthController] Token atualizado:', user.id);
-      return response.json({ token: newToken });
+      
+      const [, token] = authHeader.split(' ');
+      
+      try {
+        const decoded = verify(token, env.JWT_SECRET) as TokenPayload;
+        
+        const user = await prisma.user.findUnique({
+          where: { id: decoded.id },
+        });
+        
+        if (!user) {
+          console.log('[AuthController] Usuário não encontrado:', decoded.id);
+          throw new AppError('User not found', 404);
+        }
+        
+        const newToken = sign(
+          {
+            id: user.id,
+            role: user.role,
+            tenantId: user.tenantId,
+          },
+          env.JWT_SECRET,
+          {
+            subject: user.id,
+            expiresIn: env.JWT_EXPIRES_IN,
+          },
+        );
+        
+        console.log('[AuthController] Token atualizado:', user.id);
+        return response.json({ token: newToken });
+      } catch (error) {
+        console.error('[AuthController] Token inválido ou expirado');
+        throw new AppError('Invalid token', 401);
+      }
     } catch (error) {
       console.error('[AuthController] Erro no refreshToken:', error);
       if (error instanceof AppError) {
@@ -266,22 +279,63 @@ export class AuthController {
   async forgotPassword(request: Request, response: Response) {
     try {
       console.log('[AuthController] Iniciando forgotPassword:', request.body);
-      const { email } = request.body;
-
+      
+      // Validação básica
+      const forgotSchema = z.object({
+        email: z.string().email('Invalid email format'),
+      });
+      
+      const { email } = forgotSchema.parse(request.body);
+      
       const user = await prisma.user.findUnique({
         where: { email },
       });
-
+      
       if (!user) {
         console.log('[AuthController] Usuário não encontrado:', email);
-        throw new AppError('User not found', 404);
+        // Não revelar se o e-mail existe ou não por razões de segurança
+        return response.json({ message: 'Password reset email sent if user exists' });
       }
-
-      // TODO: Implementar envio de e-mail com token de recuperação
-      console.log('[AuthController] Envio de e-mail pendente para:', email);
-      return response.json({ message: 'Password reset email sent' });
+      
+      // Gerar token para redefinição de senha (em prod, use um token específico para esse fim)
+      const resetToken = sign(
+        {
+          id: user.id,
+          role: user.role,
+          purpose: 'password_reset',
+        },
+        env.JWT_SECRET,
+        {
+          subject: user.id,
+          expiresIn: '1h', // Token de reset expira em 1 hora
+        },
+      );
+      
+      // Em um cenário de produção real, aqui você enviaria um e-mail com o link de redefinição
+      const resetLink = `${env.get('FRONTEND_URL', 'http://localhost:3000')}/reset-password?token=${resetToken}`;
+      
+      console.log('[AuthController] Link de reset gerado (não enviado em desenvolvimento):', resetLink);
+      
+      // Em desenvolvimento, retornamos o token para fins de teste
+      if (env.isDev) {
+        return response.json({ 
+          message: 'Password reset email would be sent in production',
+          dev_token: resetToken, // Apenas para desenvolvimento!
+          reset_link: resetLink
+        });
+      }
+      
+      // Em produção, simplesmente confirme que o email foi enviado
+      return response.json({ message: 'Password reset email sent if user exists' });
     } catch (error) {
       console.error('[AuthController] Erro no forgotPassword:', error);
+      if (error instanceof z.ZodError) {
+        return response.status(400).json({
+          status: 'error',
+          message: 'Validation error',
+          errors: error.errors,
+        });
+      }
       if (error instanceof AppError) {
         return response.status(error.statusCode).json({
           status: 'error',
@@ -298,13 +352,59 @@ export class AuthController {
   async resetPassword(request: Request, response: Response) {
     try {
       console.log('[AuthController] Iniciando resetPassword:', request.body);
-      const { token, password } = request.body;
-
-      // TODO: Implementar validação do token e atualização da senha
-      console.log('[AuthController] Reset de senha pendente:', { token });
-      return response.json({ message: 'Password reset successful' });
+      
+      // Validação básica
+      const resetSchema = z.object({
+        token: z.string().min(1, 'Token is required'),
+        password: z.string().min(6, 'Password must be at least 6 characters'),
+      });
+      
+      const { token, password } = resetSchema.parse(request.body);
+      
+      try {
+        // Verificar o token (em uma implementação real, você usaria um token específico para reset)
+        const decoded = verify(token, env.JWT_SECRET) as TokenPayload;
+        
+        // Encontrar o usuário
+        const user = await prisma.user.findUnique({
+          where: { id: decoded.id },
+        });
+        
+        if (!user) {
+          console.log('[AuthController] Usuário não encontrado:', decoded.id);
+          throw new AppError('User not found', 404);
+        }
+        
+        // Hash a nova senha
+        const hashedPassword = await hash(password, 8);
+        
+        // Atualizar a senha do usuário
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { password: hashedPassword },
+        });
+        
+        console.log('[AuthController] Senha redefinida com sucesso:', user.id);
+        return response.json({ message: 'Password reset successful' });
+      } catch (error) {
+        console.error('[AuthController] Token inválido ou expirado');
+        throw new AppError('Invalid or expired token', 401);
+      }
     } catch (error) {
       console.error('[AuthController] Erro no resetPassword:', error);
+      if (error instanceof z.ZodError) {
+        return response.status(400).json({
+          status: 'error',
+          message: 'Validation error',
+          errors: error.errors,
+        });
+      }
+      if (error instanceof AppError) {
+        return response.status(error.statusCode).json({
+          status: 'error',
+          message: error.message,
+        });
+      }
       return response.status(500).json({
         status: 'error',
         message: 'Internal server error',

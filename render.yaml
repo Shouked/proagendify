@@ -18,7 +18,8 @@ services:
         sync: false
       - key: JWT_EXPIRES_IN
         value: 1d
-    healthCheckPath: /api/health-check
-    envVars:
       - key: REDIS_URL
-        value: redis://redis:6379 
+        sync: false
+      - key: ALLOWED_ORIGINS
+        value: https://proagendify-frontend.vercel.app,https://proagendify.vercel.app
+    healthCheckPath: /api/health-check 
