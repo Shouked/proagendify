@@ -22,16 +22,14 @@ npx prisma generate
 echo "Compilando TypeScript..."
 npx tsc --project tsconfig-render.json
 
-# Criar diretórios necessários para o Prisma
-echo "Configurando diretórios do Prisma..."
-mkdir -p dist/node_modules/.prisma
-mkdir -p dist/node_modules/@prisma
+# Criar diretório de destino para o Prisma e copiar binário
+echo "Copiando binário do Prisma..."
+mkdir -p dist/prisma
+cp node_modules/.prisma/client/query-engine-linux-musl-openssl-3.0.x dist/prisma/
+chmod +x dist/prisma/query-engine-linux-musl-openssl-3.0.x
 
-# Copiar arquivos necessários do Prisma
-echo "Copiando arquivos do Prisma..."
-cp -R node_modules/.prisma dist/node_modules/
-cp -R node_modules/@prisma dist/node_modules/
-cp -R prisma dist/
+echo "Verificando binário copiado:"
+ls -la dist/prisma/
 
 echo "Build concluído com sucesso!"
 exit 0 

@@ -3,22 +3,22 @@ services:
     name: proagendify-backend
     env: node
     region: sao1
-    buildCommand: cd backend && npm install && chmod +x render-build.sh && ./render-build.sh && npx prisma generate && npm run build
+    buildCommand: cd backend && npm install && chmod +x render-build.sh && ./render-build.sh
     startCommand: cd backend && npm start
     envVars:
       - key: NODE_ENV
         value: production
       - key: NODE_VERSION
         value: 18.x
-    healthCheckPath: /api/health-check
-    envVars:
       - key: PORT
         value: 3333
       - key: DATABASE_URL
         sync: false
       - key: JWT_SECRET
         sync: false
-      - key: REDIS_URL
-        value: redis://redis:6379
       - key: JWT_EXPIRES_IN
-        value: 1d 
+        value: 1d
+    healthCheckPath: /api/health-check
+    envVars:
+      - key: REDIS_URL
+        value: redis://redis:6379 
